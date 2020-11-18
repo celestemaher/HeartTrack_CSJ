@@ -1,0 +1,39 @@
+#map {
+    width: 100%;
+    height: 400px;
+    background-color: grey;
+}
+
+#logo {
+    margin: 5px;
+    width: 50px;
+}
+
+#name {
+    font-size: 32pt;
+    vertical-align: top;
+}
+
+#account {
+   padding-top: 5px;
+}
+
+#addDeviceForm, #main, #error {
+   display: none;
+}
+
+.input-field input {
+   color: white;
+}
+
+.select-dropdown {
+  color: white;
+}
+
+.select-wrapper .caret {
+   fill: white;
+} 
+
+.ping {
+  margin-left: 20px;
+}
