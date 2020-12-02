@@ -26,12 +26,13 @@ function accountInfoSuccess(data, textStatus, jqXHR) {
     });
   }
 
-   for (let data of data.userHeartdata) {
-    $("#hearTrackData").before("<li class='collection-item'>Time Collected: " + data.timeCollected + ", Average Heart Rate: " + data.heartRateAvg + ", Oxegen Levels: " + data.oxygenLevels + "% </li>");
+  for (let heartData of data.userHeartdata) {
+    $("#addHeartData").before("<li class='collection-item'>Average Heart Rate: " + heartData.heartRateAvg + 
+	"bpm Oxygen Levels: "+ heartData.oxygenLevels +"% </li>");
   }
 
-}
 
+}
 function accountInfoError(jqXHR, textStatus, errorThrown) {
   // If authentication error, delete the authToken 
   // redirect user to sign-in page (which is index.html)

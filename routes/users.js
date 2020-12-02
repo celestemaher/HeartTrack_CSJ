@@ -11,11 +11,11 @@ let HeartTrackData = require('../models/heartTrackData');
 //let secret = "notasecretkeyyet";
 
 // On Repl.it, add JWT_SECRET to the .env file, and use this code
-let secret = process.env.JWT_SECRET
+//let secret = process.env.JWT_SECRET
 
 // On AWS ec2, you can use to store the secret in a separate file. 
 // The file should be stored outside of your code directory. 
-// let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
+ let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
 
 // Register a new user
 router.post('/register', function(req, res) {
@@ -94,26 +94,30 @@ router.get('/account', function(req, res) {
          accountInfo["fullName"] = user.fullName;
          accountInfo["lastAccess"] = user.lastAccess;
          accountInfo['devices'] = [];   // Array of devices
+         accountInfo['userHeartdata'] = []; //Array of User Heart Track Data
           
          // TODO: Get devices registered by uses from devices collection
          // Add each device to the accountInfo['devices'] array
+         //get data from hearttrack and add data to User heart Data
 
         Device.find({ userEmail : decodedToken.email}, function(err, devices) {
            if (!err) {
              for (device of devices) {
-               accountInfo['devices'].push({ deviceId: device.deviceId, apikey: device.apikey });
+              accountInfo['devices'].push({ deviceId: device.deviceId, apikey: device.apikey });
+	      
+          
+              HeartTrackData.find({ deviceId : device.deviceId}, function(err, heartTrackData) {  
+ 		 if (!err) {
+                    for (heartData of heartTrackData) {
+		       console.log({heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels});
+                       accountInfo['userHeartdata'].push({ heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels});
+                  }
+                }
+  		console.log(accountInfo);
+           	res.status(200).json(accountInfo);
+              });  
              }
            }
-
-           HeartTrackData.find({ deviceID : device.deviceId}, function(err, heartData) {
-              if (!err) {
-                 for (data of heartData) {
-                 accountInfo['userHeartdata'].push({ heartRateAvg: data.heartRateAvg, oxygenLevels: data.oxygenLevels, timeCollected: data.timeCollected});
-                }
-              }
-           });
-
-           res.status(200).json(accountInfo);
          });
        }
      });
@@ -126,13 +130,72 @@ router.get('/account', function(req, res) {
 
 router.post('/reading', function(req, res) {
 
-  
+  var responseJson = { 
+    status : "",
+    message : ""
+  };
 
-  let newHeartTrackData = new HeartTrackData({
-    deviceId: req.body.deviceId,
-    userEmail: email,
-    apikey: deviceApikey
+  if( !req.body.hasOwnProperty("deviceId") ) {
+    responseJson.status = "ERROR";
+    responseJson.message = "Request missing deviceId parameter.";
+    return res.status(401).send(JSON.stringify(responseJson));
+  }
+
+  if( !req.body.hasOwnProperty("apikey") ) {
+    responseJson.status = "ERROR";
+    responseJson.message = "Request missing apikey parameter.";
+    return res.status(401).send(JSON.stringify(responseJson));
+  }
+
+  if( !req.body.hasOwnProperty("heartRateAvg") ) {
+    responseJson.status = "ERROR";
+    responseJson.message = "Request missing heartRateAvg parameter.";
+    return res.status(401).send(JSON.stringify(responseJson));
+  }
+
+  if( !req.body.hasOwnProperty("oxygenLevels") ) {
+    responseJson.status = "ERROR";
+    responseJson.message = "Request missing oxygenLevels parameter.";
+    return res.status(401).send(JSON.stringify(responseJson));
+  }
+
+  Device.findOne({ deviceId: req.body.deviceId }, function(err, device) {
+    if (device !== null) {
+      if (device.apikey != req.body.apikey) {
+        responseJson.status = "ERROR";
+        responseJson.message = "Invalid apikey for device ID " + req.body.deviceId + ".";
+        return res.status(401).send(JSON.stringify(responseJson));
+      }
+      else {
+        var newHeartTrackData = new HeartTrackData({
+          heartRateAvg:   req.body.heartRateAvg, //BPM
+          oxygenLevels:   req.body.oxygenLevels, //percentage
+          deviceId:      req.body.deviceId
+          //timeCollected:  Date.now
+        });
+
+        newHeartTrackData.save(function(err, heartTrackData) {
+          if(err){
+            responseJson.status = "ERROR";
+            responseJson.message = "Error saving data in db.";
+            return res.status(401).send(JSON.stringify(responseJson));
+          }
+          else {
+            responseJson.status = "OK";
+            responseJson.message = "Data saved in db with object ID " + req.body.deviceId + ".";
+            return res.status(201).send(JSON.stringify(responseJson));
+          }
+        });
+      }
+    }
+    else{
+      responseJson.status = "ERROR";
+      responseJson.message = "Device ID " + req.body.deviceId + " not registered.";
+      return res.status(401).send(JSON.stringify(responseJson));    
+    }
+
   });
+
 });
 
 module.exports = router;

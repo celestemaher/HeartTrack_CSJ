@@ -3,14 +3,14 @@ let router = express.Router();
 let jwt = require("jwt-simple");
 let fs = require('fs');
 let Device = require("../models/device");
-let HeartTrackData = require("../models/heartRateData");
+let HeartTrackData = require("../models/heartTrackData");
 
 // On Repl.it, add JWT_SECRET to the .env file, and use this code
-let secret = process.env.JWT_SECRET
+//let secret = process.env.JWT_SECRET
 
 // On AWS ec2, you can use to store the secret in a separate file. 
 // The file should be stored outside of your code directory. 
- //let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
+ let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
 
 // Function to generate a random apikey consisting of 32 characters
 function getNewApikey() {
@@ -134,16 +134,16 @@ router.post('/ping', function(req, res, next) {
 });
 
 
-router.get('/apikey', function(req, res, next){
-  let responeJson = {
+router.post('/apikey', function(req, res, next){
+  let responseJson = {
     success: true,
     message: "",
     apikey: "null",
   };
 
   // Ensure the request includes the deviceId parameter
-  if( !req.body.hasOwnProperty("deviceId")) {
-    responeJson.success = false;
+  if(!req.body.hasOwnProperty("deviceId")) {
+    responseJson.success = false;
     responseJson.message = "Missing deviceId.";
     return res.status(400).json(responseJson);
   }
@@ -164,7 +164,7 @@ router.get('/apikey', function(req, res, next){
       else {
         responseJson.message = "Device was found and APIKey was returned.";
         responseJson.apikey = device.apikey;
-        res.status(200).json(respsonseJson);
+        return res.status(200).json(responseJson);
         //res.status(200).json(device.apikey);
       }
     });  
