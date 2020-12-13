@@ -1,0 +1,189 @@
+<html lang="en">
+   <head>
+    <meta charset="utf-8">
+    <title>HeartTrack - BPM Detailed Day View</title>
+
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!--Import materialize.css-->
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Import jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!--Google charts-->
+    <script type = "text/javascript" src = "https://www.gstatic.com/charts/loader.js">
+    </script>
+    <script type = "text/javascript">
+        google.charts.load('current', {packages: ['corechart','line']});  
+    </script>
+
+    <link href="account.html" rel="html">
+    <link href="./stylesheets/heartTrack.css" rel="stylesheet">
+    <script src="./javascripts/account.js"></script>
+    <script src="./javascripts/signout.js"></script>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   </head>
+
+   <body>
+    <!-- Dropdown Structure -->
+    <ul id='dropdown1' class='dropdown-content'>
+      <li><a href="account.html">Home</a></li>
+      <li class="divider"></li>
+      <li><a href="#!" id="signout">Sign out</a></li>
+    </ul>
+    <nav>
+      <div class="nav-wrapper red darken-3">
+        <a href="account.html" class="brand-logo left"><img id="logo" src="images/logo.png"><span id="name">HeartTrack</span></a>
+        <ul class="right ">
+          <!-- Dropdown Trigger -->
+          <li><a class='dropdown-trigger btn' href='#' data-target='dropdown1'><i class="material-icons">more_vert</i></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <ul id="heartTrackData">
+      <li id="dailyHeartData">
+        <div class="BPMDay">
+          <label>Select a Day for Daily BPM Data:</label>
+          <select id="day" name="day">
+            <option value="" disabled selected>Choose a Day</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+            <option value="0">Sunday</option>
+          </select>
+        </div>
+      </li>
+    </ul>
+
+    <div id = "container" style = "width: 550px; height: 400px; margin: 0 auto">
+    </div>
+    <script language = "JavaScript">
+      function sendAccountRequest() {
+        $.ajax({
+          url: '/users/account',
+          method: 'GET',
+          headers: { 'x-auth' : window.localStorage.getItem("authToken") },
+          dataType: 'json'
+        })
+          .done(drawBPMChart)
+          .fail(accountInfoError);
+      }
+
+      function drawBPMChart(data, textStatus, jqXHR) {
+        let day = $("#day").val();
+        //console.log("hiyooooo");
+        console.log("Day of week: " + day);
+
+        // Define the chart to be drawn.
+        var chartData = new google.visualization.DataTable();
+        chartData.addColumn('string', 'Time of Day');
+        chartData.addColumn('number', 'Heart Rate');
+        //data.addColumn('number', 'Blood Oxygen Saturation');
+       
+        
+        var i = 0;
+
+        console.log(data);
+        
+        let time7daysAgo = new Date(Date.now() - (7 * 24 * 60 * 60 * 1000));
+        let dataArray = [];
+        let x = "";
+        
+        for (let heartData of data.userHeartdata) {
+          var tempDate = new Date(heartData.timeCollected);
+          console.log(tempDate + " || " + tempDate.getDay());
+          if(tempDate > time7daysAgo){
+            //console.log("Within 7 days");
+            if(tempDate.getDay() == day){
+              //console.log(tempDate.getHours() + " || " + i);
+              console.log("['" + tempDate.getHours() + ":" + tempDate.getMinutes() + "'," + heartData.heartRateAvg + "]");
+
+              x = tempDate.getHours() + ":" + tempDate.getMinutes();
+              
+              chartData.addRow([x ,  heartData.heartRateAvg]);
+        
+            }
+          }
+        }
+        
+            
+        // Set chart options
+        var options = {'title' : 'HeartTrack: Heart Rate',
+            hAxis: {
+              title: 'Time of Day',//+ data.startTime "-" + data.stopTime,
+              textStyle: {
+                  color: '#1a237e',
+                  fontSize: 20,
+                  fontName: 'Arial',
+                  bold: true,
+                  italic: true
+              },
+              
+              titleTextStyle: {
+                  color: '#1a237e',
+                  fontSize: 16,
+                  fontName: 'Arial',
+                  bold: true,
+                  italic: true
+              }
+            },
+            
+            vAxis: {
+              title: 'Beats per Minute (BPM)',
+              textStyle: {
+                  color: '#1a237e',
+                  fontSize: 20,
+                  fontName: 'Arial',
+                  bold: true
+              },
+              titleTextStyle: {
+                  color: '#1a237e',
+                  fontSize: 16,
+                  bold: true
+              }
+            }, 
+            
+            'width':650,
+            'height':400,	  
+            colors: ['#a52714', '#0000ff', '#ff0000', '#00ff00']
+        };
+
+        // Instantiate and draw the chart.
+        var chart = new google.visualization.LineChart(document.getElementById('container'));
+        chart.draw(chartData, options);
+      }
+
+      function accountInfoError(jqXHR, textStatus, errorThrown) {
+        // If authentication error, delete the authToken 
+        // redirect user to sign-in page (which is index.html)
+        if (jqXHR.status == 401) {
+          window.localStorage.removeItem("authToken");
+          window.location = "index.html";
+        } 
+        else {
+          $("#error").html("Error: " + jqXHR.status);
+          $("#error").show();
+        }
+      }
+
+      google.charts.setOnLoadCallback(drawBPMChart);
+      //google.charts.setOnLoadCallback(drawS02Chart);
+    </script>
+  </body>
+
+  <script>
+    $('.dropdown-trigger').dropdown();
+    $('select').formSelect();
+    $("#day").change(sendAccountRequest);
+  </script>
+</html>

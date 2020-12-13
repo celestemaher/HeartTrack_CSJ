@@ -18,7 +18,7 @@
    padding-top: 5px;
 }
 
-#addDeviceForm, #main, #error {
+#addDeviceForm, #updateInfoForm, #updateError, #main, #error {
    display: none;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .select-dropdown {
-  color: white;
+  color: black  !important;
 }
 
 .select-wrapper .caret {
@@ -36,4 +36,42 @@
 
 .ping {
   margin-left: 20px;
+}
+
+.avgHrtRate th, .minHrtRate th, .maxHrtRate th{
+  color: #6e6e6e;
+  font-size: 12pt;
+  text-align: left;
+  padding: 10px 10px 10px 10px;
+  border: 1px solid white;
+  background-color: #ffcdd2;
+}
+
+.avgHrtRate td, .minHrtRate td, .maxHrtRate td{
+  color: #6e6e6e;
+  font-size: 12pt;
+  text-align: middle;
+  padding: 10px 10px 10px 10px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
+  background-color: #ffcdd2;
+}
+
+ul.dropdown-content.select-dropdown li span {
+    color: #000; 
+}
+
+button{
+  background-color: #b71c1c !important;
+}
+#getDailyS02, #getDailyBPM, #registerButton{
+  background-color: #b71c1c !important;
+}
+
+#navButton {
+  background-color: #6e0202 !important;
+}
+
+#selectTimeForm{
+  display: none;
 }

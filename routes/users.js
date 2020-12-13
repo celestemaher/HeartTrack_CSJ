@@ -11,11 +11,11 @@ let HeartTrackData = require('../models/heartTrackData');
 //let secret = "notasecretkeyyet";
 
 // On Repl.it, add JWT_SECRET to the .env file, and use this code
-//let secret = process.env.JWT_SECRET
+let secret = process.env.JWT_SECRET
 
 // On AWS ec2, you can use to store the secret in a separate file. 
 // The file should be stored outside of your code directory. 
- let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
+//let secret = fs.readFileSync(__dirname + '/../../jwtkey').toString();
 
 // Register a new user
 router.post('/register', function(req, res) {
@@ -60,6 +60,7 @@ router.post('/signin', function(req, res) {
         }
         else if(valid) {
           let authToken = jwt.encode({email: req.body.email}, secret);
+          //user.lastAccess = Date.now();
           res.status(201).json({ success: true, authToken: authToken });
         }
         else {
@@ -69,6 +70,8 @@ router.post('/signin', function(req, res) {
     }
   });
 });
+
+
 
 // Return account information
 router.get('/account', function(req, res) {
@@ -81,8 +84,8 @@ router.get('/account', function(req, res) {
   let accountInfo = { };
 
   try {
-     // Toaken decoded
-     let decodedToken = jwt.decode(authToken, secret);+
+     // Token decoded
+     let decodedToken = jwt.decode(authToken, secret);
 
      User.findOne({email: decodedToken.email}, function(err, user) {
        if (err) {
@@ -93,6 +96,9 @@ router.get('/account', function(req, res) {
          accountInfo["email"] = user.email;
          accountInfo["fullName"] = user.fullName;
          accountInfo["lastAccess"] = user.lastAccess;
+         accountInfo["startTime"] = user.startTime;
+         accountInfo["stopTime"] = user.stopTime;
+         accountInfo["reminderTime"]  = user.reminderTime;
          accountInfo['devices'] = [];   // Array of devices
          accountInfo['userHeartdata'] = []; //Array of User Heart Track Data
           
@@ -104,19 +110,18 @@ router.get('/account', function(req, res) {
            if (!err) {
              for (device of devices) {
               accountInfo['devices'].push({ deviceId: device.deviceId, apikey: device.apikey });
-	      
-          
-              HeartTrackData.find({ deviceId : device.deviceId}, function(err, heartTrackData) {  
- 		 if (!err) {
-                    for (heartData of heartTrackData) {
-		       console.log({heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels});
-                       accountInfo['userHeartdata'].push({ heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels});
-                  }
-                }
-  		console.log(accountInfo);
-           	res.status(200).json(accountInfo);
-              });  
              }
+             HeartTrackData.find({userEmail : decodedToken.email}, function(err, heartTrackData) {  
+ 		            if (!err) {
+                    for (heartData of heartTrackData) {
+		                  console.log({heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels});
+                      accountInfo['userHeartdata'].push({ heartRateAvg: heartData.heartRateAvg, oxygenLevels: heartData.oxygenLevels,
+                      timeCollected: heartData.timeCollected});
+                    }
+                }
+  		          console.log(accountInfo);
+           	    res.status(200).json(accountInfo);
+              });
            }
          });
        }
@@ -127,6 +132,96 @@ router.get('/account', function(req, res) {
     res.status(401).json({ success: false, message: "Invalid authentication token."});
   }
 });
+
+
+router.put('/updateAccount', function(req, res){
+  console.log(req.body);
+   if (!req.headers["x-auth"]) {
+    res.status(401).json({ success: false, message: "No authentication token."});
+    return;
+  }
+
+  let authToken = req.headers["x-auth"];
+  
+  try{
+    let decodedToken = jwt.decode(authToken, secret);
+
+    if(req.body.updateName != "" && req.body.newPassword != ""){
+      bcrypt.hash(req.body.newPassword, 10, function(err, hash) {
+        if(!err){
+          update = {fullName: req.body.updateName, passwordHash: hash};
+          console.log(update);
+          User.findOneAndUpdate({email: decodedToken.email}, update, function(err, user) {
+            if (err) {
+                  res.status(400).json({ success: false, message: "Error contacting DB. Please contact support."});
+            }
+          else{
+              return res.status(201).send("Status: true, user name changed");
+          }
+        });
+        }
+      });
+    }
+    else if(req.body.updateName != "" && req.body.newPassword == ""){
+      update = {fullName: req.body.updateName};
+      console.log(update);
+      User.findOneAndUpdate({email: decodedToken.email}, update, function(err, user) {
+        if (err) {
+         res.status(400).json({ success: false, message: "Error contacting DB. Please contact support."});
+        }
+        else{
+          return res.status(201).send("Status: true, user name changed");
+        }
+      });
+    }
+    else if(req.body.updateName == "" && req.body.newPassword != ""){
+      bcrypt.hash(req.body.newPassword, 10, function(err, hash) {
+        if(!err){
+          update = {passwordHash: hash};
+          console.log(update);
+          User.findOneAndUpdate({email: decodedToken.email}, update, function(err, user) {
+            if (err) {
+              res.status(400).json({ success: false, message: "Error contacting DB. Please contact support."});
+            }
+            else{
+              return res.status(201).send("Status: true, user name changed");
+            }
+          });
+        }
+      });
+    }
+  }
+  catch{
+    res.status(401).json({ success: false, message: "Invalid authentication token."});
+  }
+});
+
+
+router.put('/changeTime', function(req, res){
+  if (!req.headers["x-auth"]) {
+    res.status(401).json({ success: false, message: "No authentication token."});
+    return;
+  }
+
+  let authToken = req.headers["x-auth"];
+  
+  try{
+    let decodedToken = jwt.decode(authToken, secret);
+    update = {startTime: req.body.startTime, stopTime: req.body.stopTime, reminderTime: req.body.incrementer};
+    User.findOneAndUpdate({email: decodedToken.email}, update, function(err, user) {
+        if (err) {
+         res.status(400).json({ success: false, message: "Error contacting DB. Please contact support."});
+        }
+        else{
+          return res.status(201).send("Status: true, User collection timing has been changed");
+        }
+    });
+  }
+  catch{
+    res.status(401).json({ success: false, message: "Invalid authentication token."});
+  }
+});
+
 
 router.post('/reading', function(req, res) {
 
@@ -170,8 +265,9 @@ router.post('/reading', function(req, res) {
         var newHeartTrackData = new HeartTrackData({
           heartRateAvg:   req.body.heartRateAvg, //BPM
           oxygenLevels:   req.body.oxygenLevels, //percentage
-          deviceId:      req.body.deviceId
-          //timeCollected:  Date.now
+          deviceId:      req.body.deviceId,
+          userEmail:     device.userEmail,
+          timeCollected:  Date.now() 
         });
 
         newHeartTrackData.save(function(err, heartTrackData) {
@@ -181,8 +277,9 @@ router.post('/reading', function(req, res) {
             return res.status(401).send(JSON.stringify(responseJson));
           }
           else {
+            var now = new Date();
             responseJson.status = "OK";
-            responseJson.message = "Data saved in db with object ID " + req.body.deviceId + ".";
+            responseJson.message = "Data saved in db with object ID " + req.body.deviceId + " at " + newHeartTrackData.timeCollected.toUTCString() + " || " + now.toLocaleString('en-US', {timeZone: 'America/Denver', hour12: false}) + " || " + newHeartTrackData.timeCollected.getTimezoneOffset() + ".";
             return res.status(201).send(JSON.stringify(responseJson));
           }
         });

@@ -34,7 +34,7 @@
 			<a href="account.html" class="brand-logo left"><img id="logo" src="images/logo.png"><span id="name">HeartTrack</span></a>
 			<ul class="right ">
 				<!-- Dropdown Trigger -->
-	      <li><a class='dropdown-trigger btn' href='#' data-target='dropdown1'><i class="material-icons">more_vert</i></a></li>
+	      <li><a id='navButton' class='dropdown-trigger btn' href='#' data-target='dropdown1'><i class="material-icons">more_vert</i></a></li>
 			</ul>
 		</div>
 	</nav>
@@ -48,9 +48,25 @@
 				<li class="collection-item">Email: <span id="email"></span></li>
 				<li class="collection-item">Name: <span id="fullName"></span></li>
 				<li class="collection-item">Last Access: <span id="lastAccess"></span></li>
-       				<li class= "collection-item" id = "updateInfoForm">
+       	<li class= "collection-item" id = "updateInfoForm">
+           <div>
+           <label for = "updateName">New Name:</label>
+           <input type = "text" id = "updateName" name = "updateName">
+           <label for="newPassword">New Password</label>
+           </div>
+           <div>
+           <input type="Password" id="newPassword" name="newPassword" >
+           </div>
+           <div>
+           <label for="newPasswordConfirm">Confirm Password</label>
+           <input type="Password" id="newPasswordConfirm" name="newPasswordConfirm" >
+           </div>
+           <button id="update" class="waves-effect waves-light btn">Update</button> 
+					<button id="cancelUpdate" class="waves-effect waves-light btn">Cancel</button> 
 				</li>
-				<li class="collection-item" id="updateInfoControl"><a href="#!" id="updateInfoForm">Update Information</a></li>
+				<li class="collection-item" id="updateInfoControl"><a href="#!" id="updateInfo">Update Information</a></li>
+
+        <div class='red-text text-darken-2' id="updateError"></div>
 
 			</ul>
 
@@ -67,21 +83,166 @@
 				<li class="collection-item" id="addDeviceControl"><a href="#!" id="addDevice">Add Device</a></li>
 			</ul>
 
-      				<ul class="collection with-header" id="heartTrackData">
+      <ul class="collection with-header" id="devices">
+        <li class="collection-header">
+					<h5>Data Collection Options</h5>
+				</li>
+        <li class = "collection-item black-text" id = "currentTimeInfo">
+            <table>
+              <tr class = "crStartTime" >
+                <th>Start Time</th>
+                <td></td>
+              </tr>
+              <tr class = "crStopTime">
+                <th>Stop Time</th>
+                <td></td>
+              </tr>
+              <tr class ="crReminderTime">
+                <th>Reminder Time</th>
+                <td></td>
+              </tr>
+          </table>
+        </li>
+        <li class = "collection-item black-text" id = "selectTimeForm">
+          <div class = "startTime">
+              <label>Select A Start Time </label>
+              <select id = "startTime">
+                <option value="" disabled selected>Choose your option</option>
+                <option value="100">1:00am</option>
+                <option value="200">2:00am</option>
+                <option value="300">3:00am</option>
+                <option value="400">4:00am</option>
+                <option value="500">5:00am</option>
+                <option value="600">6:00am</option>
+                <option value="700">7:00am</option>
+                <option value="800" selected>8:00am</option>
+                <option value="900">9:00am</option>
+                <option value="1000">10:00am</option>
+                <option value="1100">11:00am</option>
+                <option value="1200">12:00pm</option>
+                <option value="1300">1:00pm</option>
+                <option value="1400">2:00pm</option>
+                <option value="1500">3:00pm</option>
+                <option value="1600">4:00pm</option>
+                <option value="1700">5:00pm</option>
+                <option value="1800">6:00pm</option>
+                <option value="1900">7:00pm</option>
+                <option value="2000">8:00pm</option>
+                <option value="2100">9:00pm</option>
+                <option value="2200">10:00pm</option>
+                <option value="2300">11:00pm</option>
+                <option value="2400">12:00pm</option>
+              </select>
+          </div>
+          <div class="stopTime">
+            <label>Select A Stop Time </label>
+            <select id = "stopTime">
+                <option value="" disabled selected>Choose your option</option>
+                <option value="100">1:00am</option>
+                <option value="200">2:00am</option>
+                <option value="300">3:00am</option>
+                <option value="400">4:00am</option>
+                <option value="500">5:00am</option>
+                <option value="600">6:00am</option>
+                <option value="700">7:00am</option>
+                <option value="800">8:00am</option>
+                <option value="900">9:00am</option>
+                <option value="1000">10:00am</option>
+                <option value="1100">11:00am</option>
+                <option value="1200">12:00pm</option>
+                <option value="1300">1:00pm</option>
+                <option value="1400">2:00pm</option>
+                <option value="1500">3:00pm</option>
+                <option value="1600">4:00pm</option>
+                <option value="1700">5:00pm</option>
+                <option value="1800">6:00pm</option>
+                <option value="1900">7:00pm</option>
+                <option value="2000" selected>8:00pm</option>
+                <option value="2100">9:00pm</option>
+                <option value="2200">10:00pm</option>
+                <option value="2300">11:00pm</option>
+                <option value="2400">12:00pm</option>
+            </select>
+          </div>
+          <div class="incrementer">
+            <label>Select a reminder timer</label>
+            <select id = "incrementer">
+                <option value="" disabled selected>Choose your option</option>
+                <option value="10">10 min</option>
+                <option value="15">15 min</option>
+                <option value="20">20 min</option>
+                <option value="25">25 min</option>
+                <option value="30" selected>30 min</option>
+                <option value="35">35 min</option>
+                <option value="40">40 min</option>
+                <option value="45">45 min</option>
+                <option value="50">50 min</option>
+                <option value="55">55 min</option>
+                <option value="60">60 min</option>
+            </select>
+          </div>
+					<button id="submit" class="waves-effect waves-light btn">Submit</button> 
+					<button id="cancelTime" class="waves-effect waves-light btn">Cancel</button> 
+        </li>
+        <li>
+          <li class="collection-item" id="updateTimeControl"><a href="#!" id="updateTime">Update Information</a></li>
+        </li>
+      </ul>
+    
+      <ul class="collection with-header" id="heartTrackData">
 				<li class="collection-header">
-					<h5>Heart Track Data</h5>
-        			</li>
-				<li class="collection-item" id="addHeartData">Data is collected from Heart Rate Monitor</li>
+				<h5>Heart Track Data</h5>
+        </li>
+				<li class="collection-item" id="addHeartData">
+          <h6>Weekly Summary</h6>
+          <p>Data collected from the last seven days</p>
+          <table>
+              <tr class = "avgHrtRate" >
+                <th>Average Heart Rate</th>
+                <td></td>
+              </tr>
+              <tr class = "minHrtRate">
+                <th>Minimum Heart Rate</th>
+                <td></td>
+              </tr>
+              <tr class ="maxHrtRate">
+                <th>Maximum Heart Rate</th>
+                <td></td>
+              </tr>
+          </table>
+          <div id="dailyHeartData">
+            <a id="getDailyBPM" class="waves-effect waves-light btn">Get Daily BPM</a>
+            <a id="getDailyS02" class="waves-effect waves-light btn">Get Daily S02</a>
+					</div>
+        </li> 
 			</ul>
 
-      
+      <!--
+      <ul id="heartTrackData">
+        <li id="dailyHeartData">
+          <div>
+            <a id="getDailyBPM" class="waves-effect waves-light btn">Get Daily BPM</a>
+					</div>
+        </li>
+      </ul>
+      <ul id="heartTrackData">
+        <li>
+          <div>
+						<a id="getDailyS02" class="waves-effect waves-light btn">Get Daily S02</a>
+					</div>
+        </li>
+      </ul>
+
 			<div class='red-text text-darken-2' id="error"></div>
 		</div>
 	</div>
-  </body>
+  </body> -->
 
   <!-- Initialize dropdown menu in materialize -->
   <script>
-    $('.dropdown-trigger').dropdown();
+    $(document).ready(function(){
+      $('.dropdown-trigger').dropdown();
+      $('select').formSelect();
+    });
   </script>
 </html>
